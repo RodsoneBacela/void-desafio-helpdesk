@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helpdesk Lab • Simulador de Incidentes e Atendimento N1/N2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-brand">
+        <div class="brand-badge">FIDLI PLATFORM</div>
+        <div class="brand-title-group">
+          <h1>Painel de Incidentes & Diagnóstico Operacional (N1 / N2)</h1>
+          <p class="subtitle">Central de Triagem de Incidentes, Logs e Atendimento a Lojistas e Parceiros</p>
+        </div>
+      </div>
+
+      <div class="header-center-stats">
+        <div class="stat-pill">
+          <span class="stat-num" id="totalScenariosCount">12</span>
+          <span class="stat-label">Cenários</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num" id="testedScenariosCount">0</span>
+          <span class="stat-label">Testados</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num" id="errorsLoggedCount">0</span>
+          <span class="stat-label">Erros</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-indicator" id="serverStatusBadge">
+          <span class="status-dot"></span>
+          <span class="status-text">Server Online</span>
+        </div>
+        <button class="btn btn-outline" id="btnResetState" title="Restaura os dados e limites padrão">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Resetar Estado
+        </button>
+        <button class="btn btn-outline" id="btnGuideDoc" title="Abrir Manual e Roteiro de Operações">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          GUIA_DO_CANDIDATO.md
+        </button>
+        <button class="btn btn-outline" id="btnTicketsDoc" title="Ver Caderno com os 12 Tickets">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          SIMULACAO_TICKETS.md
+        </button>
+      </div>
+    </header>
+
+    <!-- Global Network Activity Progress Bar -->
+    <div class="global-progress-bar" id="globalProgressBar">
+      <div class="progress-bar-fill" id="progressBarFill"></div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <main class="main-workspace">
+      <!-- Left Sidebar: Ticket & Scenario List -->
+      <aside class="sidebar-scenarios">
+        <div class="sidebar-header">
+          <h2>Tickets & Ocorrências</h2>
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="scenarioSearch" placeholder="Buscar ticket, ID ou cliente...">
+          </div>
+          <div class="category-tabs" id="categoryTabs">
+            <button class="cat-tab active" data-cat="all">Todos (12)</button>
+            <button class="cat-tab" data-cat="Transações & Pagamentos">Pagamentos</button>
+            <button class="cat-tab" data-cat="Integrações & Parceiros">APIs/Parceiros</button>
+            <button class="cat-tab" data-cat="Equipamentos, POS & Mobile">POS/Mobile</button>
+          </div>
+        </div>
+
+        <div class="scenario-list" id="scenarioListContainer">
+          <!-- Dynamically populated -->
+        </div>
+      </aside>
+
+      <!-- Center Column: Incident Detail & Interactive Tester -->
+      <section class="scenario-content">
+        <!-- TOP LEVEL VIEW SWITCHER TABS (PROMINENT & HIGHLIGHTED) -->
+        <div class="primary-view-nav">
+          <button class="primary-tab-btn active" id="tabBtnClientView" data-tab="client">
+            <span class="tab-emoji-large">📱</span>
+            <div class="primary-tab-text">
+              <span class="primary-tab-heading">1. Interface do Dispositivo (Visão do Lojista/Cliente)</span>
+              <span class="primary-tab-subheading">Reproduza a interação no terminal POS, checkout M-Pesa ou tablet de atendimento</span>
+            </div>
+            <span class="live-pulse-badge">Modo Visual</span>
+          </button>
+
+          <button class="primary-tab-btn" id="tabBtnTechView" data-tab="tech">
+            <span class="tab-emoji-large">🧪</span>
+            <div class="primary-tab-text">
+              <span class="primary-tab-heading">2. Bancada Técnica N1 (API & Payloads)</span>
+              <span class="primary-tab-subheading">Inspecione requisições HTTP, payloads JSON, cabeçalhos e status codes</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Selected Incident Overview (Ticket Header & Customer Complaint) -->
+        <div class="card incident-card">
+          <div class="incident-header">
+            <div class="badge-group">
+              <span class="badge badge-id" id="incId">SCN-01</span>
+              <span class="badge badge-priority" id="incPriority">Alta</span>
+              <span class="badge badge-category" id="incCategory">Transações & Pagamentos</span>
+              <span class="badge badge-channel" id="incChannel">WhatsApp</span>
+            </div>
+            <h2 id="incTitle">Título do Ticket</h2>
+          </div>
+
+          <div class="customer-message-box">
+            <div class="msg-header">
+              <div class="reporter-avatar">👤</div>
+              <div class="reporter-meta">
+                <strong id="incReporter">Cliente / Lojista</strong>
+                <span class="msg-time" id="incMsgTime">Hoje às 08:35 • Ticket Aberto</span>
+              </div>
+            </div>
+            <div class="msg-body" id="incComplaint">
+              Carregando mensagem do ticket...
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 1: Client Screen Simulator -->
+        <div class="card client-sim-card" id="clientSimView">
+          <div class="sim-header-row">
+            <div class="sim-title-group">
+              <span class="sim-device-pill" id="clientSimDevice">Terminal POS Supermercado</span>
+              <h3 id="clientSimHeadline">Tela Operacional do Cliente / Dispositivo</h3>
+            </div>
+            <div class="sim-controls">
+              <button class="btn btn-sm btn-danger-soft" id="btnClientSimTriggerError">
+                🔴 Reproduzir Falha Relatada
+              </button>
+              <button class="btn btn-sm btn-success-soft" id="btnClientSimTriggerFix">
+                🟢 Testar Cenário Corrigido
+              </button>
+            </div>
+          </div>
+
+          <!-- Realistic Device Screen Container with In-Device Loader -->
+          <div class="device-frame" id="clientDeviceFrame">
+            <!-- Dynamically populated with scenario UI -->
+          </div>
+
+          <!-- In-Device Animated Loading Overlay -->
+          <div class="device-loading-overlay hidden" id="deviceLoadingOverlay">
+            <div class="spinner-ring"></div>
+            <div class="device-loading-title" id="deviceLoadingTitle">Processando requisição no backend...</div>
+            <div class="device-loading-sub" id="deviceLoadingSub">Aguardando resposta do servidor</div>
+            <div class="device-loading-timer" id="deviceLoadingTimer">0.0s</div>
+          </div>
+
+          <div class="sim-footer-bar">
+            <span class="sim-footer-hint">💡 O que você fizer nesta tela dispara a requisição real no backend e gera logs ao vivo no console à direita.</span>
+            <button class="btn btn-sm btn-ghost" id="btnGoToTechView">Inspecionar na Bancada Técnica ➔</button>
+          </div>
+        </div>
+
+        <!-- VIEW 2: Interactive API Tester -->
+        <div class="card tester-card hidden" id="techTesterView">
+          <div class="card-title-row">
+            <h3>🧪 Bancada de Testes de Requisição</h3>
+            <div class="toggle-mode-group">
+              <button class="mode-btn active" id="btnModeBreak">🔴 Modo Erro (Bug Real)</button>
+              <button class="mode-btn" id="btnModeFix">🟢 Modo Resolvido (Com Fix)</button>
+            </div>
+          </div>
+
+          <!-- URL Bar -->
+          <div class="url-bar">
+            <span class="method-tag method-post" id="currentMethod">POST</span>
+            <input type="text" id="currentEndpoint" class="url-input" readonly value="/api/transactions/process">
+            <button class="btn btn-primary" id="btnExecuteRequest">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Executar Requisição
+            </button>
+          </div>
+
+          <!-- Request Editor Tabs -->
+          <div class="editor-section">
+            <div class="editor-tabs">
+              <button class="ed-tab active" data-tab="body">Request Body (JSON)</button>
+              <button class="ed-tab" data-tab="headers">Headers (<span id="headerCount">1</span>)</button>
+              <button class="ed-tab" data-tab="curl">Comando cURL</button>
+            </div>
+
+            <div class="tab-content" id="tabContentBody">
+              <textarea id="payloadEditor" class="code-editor" spellcheck="false" placeholder="{}"></textarea>
+            </div>
+
+            <div class="tab-content hidden" id="tabContentHeaders">
+              <textarea id="headersEditor" class="code-editor" spellcheck="false" placeholder="{}"></textarea>
+            </div>
+
+            <div class="tab-content hidden" id="tabContentCurl">
+              <div class="curl-box">
+                <pre id="curlPreview">curl -X POST ...</pre>
+                <button class="btn btn-sm btn-outline" id="btnCopyCurl">Copiar cURL</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Response Inspector -->
+          <div class="response-section">
+            <div class="response-header">
+              <div class="resp-status-group">
+                <span class="resp-title">Resposta da API:</span>
+                <span class="status-pill status-idle" id="respStatusPill">Nenhuma requisição enviada</span>
+                <span class="time-pill hidden" id="respTimePill">0 ms</span>
+              </div>
+              <button class="btn btn-sm btn-ghost" id="btnCopyResponse" title="Copiar resposta">Copiar JSON</button>
+            </div>
+            <pre class="response-viewer" id="responseBodyViewer">// Execute uma requisição acima para inspecionar o status HTTP e payload de resposta.</pre>
+          </div>
+
+          <!-- Technical Hint Accordion -->
+          <details class="hint-accordion">
+            <summary class="hint-summary">
+              <span class="hint-icon">💡</span>
+              <strong>Dica de Análise Técnica N1 (Guia de Apoio)</strong>
+              <span class="hint-arrow">▼</span>
+            </summary>
+            <div class="hint-body" id="hintContent">
+              Dica não disponível.
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- Right Column: Live Logs Terminal -->
+      <aside class="sidebar-logs">
+        <div class="logs-header">
+          <div class="logs-title-group">
+            <span class="terminal-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </span>
+            <h3>Console do Servidor (Logs ao Vivo)</h3>
+          </div>
+          <div class="logs-actions">
+            <button class="btn-icon" id="btnClearLogs" title="Limpar logs"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            <button class="btn-icon" id="btnCopyLogs" title="Copiar todos os logs"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </div>
+        </div>
+
+        <div class="logs-filter-bar">
+          <button class="log-filter-btn active" data-filter="ALL">Todos</button>
+          <button class="log-filter-btn filter-error" data-filter="ERROR">ERROR</button>
+          <button class="log-filter-btn filter-warn" data-filter="WARN">WARN</button>
+          <button class="log-filter-btn filter-info" data-filter="INFO">INFO</button>
+        </div>
+
+        <div class="terminal-body" id="terminalLogsContainer">
+          <div class="terminal-empty">Aguardando eventos do servidor...</div>
+        </div>
+
+        <div class="terminal-footer">
+          <label class="auto-scroll-label">
+            <input type="checkbox" id="chkAutoScroll" checked> Rolar automaticamente
+          </label>
+          <span class="log-counter" id="logCountLabel">0 entradas</span>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Modal for Documentation & Candidate Guide -->
+    <div class="modal-overlay hidden" id="ticketsModal">
+      <div class="modal-window modal-wide">
+        <div class="modal-header">
+          <div class="modal-header-tabs">
+            <button class="modal-tab-btn active" id="modalTabBtnGuide" data-tab="guide">📘 Manual de Operações (GUIA_DO_CANDIDATO.md)</button>
+            <button class="modal-tab-btn" id="modalTabBtnTickets" data-tab="tickets">📝 Caderno de Respostas (SIMULACAO_TICKETS.md)</button>
+          </div>
+          <button class="btn-close" id="btnCloseModal">✕</button>
+        </div>
+        
+        <!-- Tab 1: Guia do Candidato -->
+        <div class="modal-body modal-scrollable" id="modalContentGuide">
+          <div class="doc-banner">
+            <strong>Ecossistema Transacional Fidli • Suporte Técnico & Operações (N1 / N2)</strong>
+            <p>Este painel reproduz 12 falhas reais de produção. Utilize a interface visual ou a bancada técnica para inspecionar cada chamado.</p>
+          </div>
+          
+          <div class="instructions-card">
+            <h4>🎯 Metodologia de Investigação em 4 Passos:</h4>
+            <ol>
+              <li><strong>Reprodução Visual:</strong> Na aba <em>1. Interface do Dispositivo</em>, reproduza a ação do lojista e veja o erro exibido no ecrã do equipamento.</li>
+              <li><strong>Inspeção Técnica:</strong> Na aba <em>2. Bancada Técnica N1</em>, analise a rota REST, os cabeçalhos (headers), os dados JSON e o código HTTP retornado.</li>
+              <li><strong>Correlação de Logs:</strong> No <em>Console do Servidor</em> à direita, verifique o timestamp, a severidade do log (ERROR/WARN) e os parâmetros internos.</li>
+              <li><strong>Preenchimento do Laudo:</strong> No arquivo <code>SIMULACAO_TICKETS.md</code>, elabore a resposta empática ao cliente, o diagnóstico técnico e a decisão de roteamento.</li>
+            </ol>
+          </div>
+
+          <div class="instructions-card">
+            <h4>⚖️ Matriz de Severidade e Fluxo de Escalonamento:</h4>
+            <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
+              <li><strong>P1 / Crítica:</strong> Falha generalizada, timeout de gateway financeiro (M-Pesa) com risco de dupla cobrança, ou indisponibilidade de VPN bancária. <em>Ação: Escalonamento imediato para N2 / DevOps.</em></li>
+              <li><strong>P2 / Alta:</strong> Falhas que afetam faturamento imediato (fila de SMS OTP indisponível, chave duplicada no caixa, colisão de MAC address). <em>Ação: Tratamento prioritário com evidências.</em></li>
+              <li><strong>P3 / Média:</strong> Dúvidas de integração, parâmetros inválidos em requisições de parceiros ou sessão expirada no terminal. <em>Ação: Resolução direta no primeiro nível (N1).</em></li>
+            </ul>
+          </div>
+
+          <p class="modal-tip">💡 <em>Consulte o documento <code>GUIA_DO_CANDIDATO.md</code> na raiz do projeto para a especificação completa de cada canal de comunicação.</em></p>
+        </div>
+
+        <!-- Tab 2: Instruções dos Tickets -->
+        <div class="modal-body modal-scrollable hidden" id="modalContentTickets">
+          <p>O arquivo oficial para preenchimento e submissão é o <code>SIMULACAO_TICKETS.md</code> localizado na raiz deste repositório.</p>
+          <div class="instructions-card">
+            <h4>Campos Obrigatórios em cada um dos 12 Chamados:</h4>
+            <ol>
+              <li><strong>1. Resposta ao Cliente:</strong> Redação cordial e humanizada, orientando o lojista com clareza, prazos estimados e sem uso de termos de stack trace ou nomes de banco de dados internos.</li>
+              <li><strong>2. Diagnóstico Técnico N1:</strong> Causa raiz sustentada pelo código de status HTTP (4xx/5xx), payload retornado e evidências coletadas no console.</li>
+              <li><strong>3. Ação / Roteamento:</strong> Especificação de quem trata o problema (Resolução local N1 vs Escalonamento para N2 Financeiro, DevOps ou Engenharia de Software) com evidências anexadas.</li>
+            </ol>
+          </div>
+          <p class="modal-tip">💡 <em>Após concluir a análise dos 12 incidentes, execute <code>npm test</code> no terminal para conferir a integridade dos endpoints antes da entrega.</em></p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="btnGotItModal">Voltar à Bancada de Testes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

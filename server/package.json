@@ -1,0 +1,14 @@
+{
+  "name": "fidli-support-diagnostics-service",
+  "version": "1.0.0",
+  "description": "Fidli Platform - Incident Simulation and Diagnostics Service",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
